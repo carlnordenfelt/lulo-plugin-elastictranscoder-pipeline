@@ -16,8 +16,10 @@ See the [AWS SDK Documentation for ElasticTranscoder::createPipeline](http://doc
 ### Return Values
 When the logical ID of this resource is provided to the Ref intrinsic function, Ref returns the Id of the Pipeline.
 
+`{ "Ref": "Pipeline" }`
+
 #### Arn
-`{ "Fn::GetAtt: ["Pipeline", ""Arn"] }"`
+`{ "Fn::GetAtt: ["Pipeline", "Arn"] }"`
 
 Returns the Pipeline Arn
 
@@ -31,7 +33,8 @@ The Custom Resource Lambda requires the following permissions for this plugin to
        "elastictranscoder:DeletePipeline",
        "elastictranscoder:UpdatePipeline",
        "elastictranscoder:UpdatePipelineNotifications",
-       "elastictranscoder:UpdatePipelineStatus"
+       "elastictranscoder:UpdatePipelineStatus",
+       "iam:PassRole"
    ],
    "Resource": "*"
 }

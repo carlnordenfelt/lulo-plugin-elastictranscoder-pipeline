@@ -132,6 +132,7 @@ describe('Index unit tests', function () {
 
     describe('delete', function () {
         it('should succeed', function (done) {
+            event.PhysicalResourceId = '1234567890123-123456';
             subject.delete(event, {}, function (error, response) {
                 expect(error).to.equal(undefined);
                 expect(response).to.equal(undefined);
@@ -139,6 +140,7 @@ describe('Index unit tests', function () {
             });
         });
         it('should fail due to deletePipeline error', function (done) {
+            event.PhysicalResourceId = '1234567890123-123456';
             deletePipelineStub.yields({ code: 'deletePipeline' });
             subject.delete(event, {}, function (error, response) {
                 expect(error.code).to.equal('deletePipeline');
@@ -150,12 +152,24 @@ describe('Index unit tests', function () {
             });
         });
         it('should not fail if deletePipeline error is ResourceNotFound', function (done) {
+            event.PhysicalResourceId = '1234567890123-123456';
             deletePipelineStub.yields({ code: 'ResourceNotFoundException' });
             subject.delete(event, {}, function (error, response) {
                 expect(error).to.equal(undefined);
                 expect(createPipelineStub.called).to.equal(false);
                 expect(updatePipelineStub.called).to.equal(false);
                 expect(deletePipelineStub.calledOnce).to.equal(true);
+                expect(response).to.equal(undefined);
+                done();
+            });
+        });
+        it('should not fail if PhysicalResourceId is not an actual pipeline id', function (done) {
+            event.PhysicalResourceId = 'PhysicalResourceId';
+            subject.delete(event, {}, function (error, response) {
+                expect(error).to.equal(undefined);
+                expect(createPipelineStub.called).to.equal(false);
+                expect(updatePipelineStub.called).to.equal(false);
+                expect(deletePipelineStub.called).to.equal(false);
                 expect(response).to.equal(undefined);
                 done();
             });

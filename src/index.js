@@ -33,18 +33,6 @@ pub.create = function (event, _context, callback) {
     });
 };
 
-pub.delete = function (event, _context, callback) {
-    var params = {
-        Id: event.PhysicalResourceId
-    };
-    elasticTranscoder.deletePipeline(params, function (error) {
-        if (error && error.code !== 'ResourceNotFoundException') {
-            return callback(error);
-        }
-        callback();
-    });
-};
-
 pub.update = function (event, _context, callback) {
     delete event.ResourceProperties.ServiceToken;
     var params = event.ResourceProperties;
@@ -61,4 +49,21 @@ pub.update = function (event, _context, callback) {
         callback(null, data);
     });
 };
+
+pub.delete = function (event, _context, callback) {
+    if (!event.PhysicalResourceId.match(/^\d{13}-\w{6}$/)) {
+        return setImmediate(callback);
+    }
+
+    var params = {
+        Id: event.PhysicalResourceId
+    };
+    elasticTranscoder.deletePipeline(params, function (error) {
+        if (error && error.code !== 'ResourceNotFoundException') {
+            return callback(error);
+        }
+        callback();
+    });
+};
+
 module.exports = pub;
