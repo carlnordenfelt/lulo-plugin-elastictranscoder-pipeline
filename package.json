@@ -19,7 +19,8 @@
     "Custom Resource",
     "Plugin",
     "Lulo",
-    "Lowercase"
+    "Elastic Transcoder",
+    "Pipeline"
   ],
   "author": "Carl Nordenfelt",
   "license": "MIT",
