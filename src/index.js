@@ -35,6 +35,7 @@ pub.create = function (event, _context, callback) {
 
 pub.update = function (event, _context, callback) {
     delete event.ResourceProperties.ServiceToken;
+    delete event.ResourceProperties.OutputBucket; // Not accepted by SDK
     var params = event.ResourceProperties;
     params.Id = event.PhysicalResourceId;
     elasticTranscoder.updatePipeline(params, function (error, response) {
