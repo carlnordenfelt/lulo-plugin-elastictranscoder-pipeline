@@ -1,15 +1,12 @@
-'use strict';
-
-var expect = require('chai').expect;
-var mockery = require('mockery');
-var sinon = require('sinon');
+const expect = require('chai').expect;
+const mockery = require('mockery');
+const sinon = require('sinon');
 
 describe('Index unit tests', function () {
-    var subject;
-    var createPipelineStub = sinon.stub();
-    var updatePipelineStub = sinon.stub();
-    var deletePipelineStub = sinon.stub();
-    var event;
+    let subject, event;
+    const createPipelineStub = sinon.stub();
+    const updatePipelineStub = sinon.stub();
+    const deletePipelineStub = sinon.stub();
 
     before(function () {
         mockery.enable({
@@ -17,7 +14,7 @@ describe('Index unit tests', function () {
             warnOnUnregistered: false
         });
 
-        var awsSdkStub = {
+        const awsSdkStub = {
             ElasticTranscoder: function () {
                 this.createPipeline = createPipelineStub;
                 this.updatePipeline = updatePipelineStub;
@@ -29,16 +26,16 @@ describe('Index unit tests', function () {
         subject = require('../../src/index');
     });
     beforeEach(function () {
-        createPipelineStub.reset().resetBehavior();
+        sinon.reset();
+
         createPipelineStub.yields(undefined, { Pipeline: { Id: 'Id', Arn: 'Arn' } });
-        updatePipelineStub.reset().resetBehavior();
         updatePipelineStub.yields(undefined, { Pipeline: { Id: 'Id', Arn: 'Arn' } });
-        deletePipelineStub.reset().resetBehavior();
         deletePipelineStub.yields();
 
         event = {
             ResourceProperties: {
                 InputBucket: 'InputBucket',
+                OutputBucket: 'OutputBucket',
                 Name: 'Name',
                 Role: 'Role'
             }
@@ -106,6 +103,9 @@ describe('Index unit tests', function () {
     });
 
     describe('update', function () {
+        beforeEach(() => {
+            event.OldResourceProperties = { ...event.ResourceProperties };
+        });
         it('should succeed', function (done) {
             subject.update(event, {}, function (error, response) {
                 expect(error).to.equal(null);
@@ -117,7 +117,23 @@ describe('Index unit tests', function () {
                 done();
             });
         });
+        it('should fail if the OutputBucket value is changes', function (done) {
+            event.OldResourceProperties.OutputBucket = 'AnotherBucket';
+
+            subject.update(event, {}, function (error, response) {
+                expect(createPipelineStub.called).to.equal(false);
+                expect(updatePipelineStub.calledOnce).to.equal(false);
+                expect(deletePipelineStub.called).to.equal(false);
+                expect(response).to.equal(undefined);
+                expect(error.message).equals('OutputBucket cannot be changed. It is not supported by the AWS SDK');
+                done();
+            });
+        });
         it('should fail due to updatePipeline error', function (done) {
+            // Also asserting that not passing an OutputBucket works as expected
+            delete event.OldResourceProperties.OutputBucket;
+            delete event.ResourceProperties.OutputBucket;
+
             updatePipelineStub.yields('updatePipeline');
             subject.update(event, {}, function (error, response) {
                 expect(error).to.equal('updatePipeline');

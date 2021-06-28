@@ -1,9 +1,7 @@
-'use strict';
+const aws = require('aws-sdk');
+const elasticTranscoder = new aws.ElasticTranscoder({ apiVersion: '2012-09-25' });
 
-var aws = require('aws-sdk');
-var elasticTranscoder = new aws.ElasticTranscoder({ apiVersion: '2012-09-25' });
-
-var pub = {};
+const pub = {};
 
 pub.validate = function (event) {
     if (!event.ResourceProperties.InputBucket) {
@@ -19,13 +17,13 @@ pub.validate = function (event) {
 
 pub.create = function (event, _context, callback) {
     delete event.ResourceProperties.ServiceToken;
-    var params = event.ResourceProperties;
+    const params = event.ResourceProperties;
     elasticTranscoder.createPipeline(params, function (error, response) {
         if (error) {
             return callback(error);
         }
 
-        var data = {
+        const data = {
             physicalResourceId: response.Pipeline.Id,
             Arn: response.Pipeline.Arn
         };
@@ -34,16 +32,20 @@ pub.create = function (event, _context, callback) {
 };
 
 pub.update = function (event, _context, callback) {
+    if (event.ResourceProperties.OutputBucket !== event.OldResourceProperties.OutputBucket) {
+        return callback(new Error('OutputBucket cannot be changed. It is not supported by the AWS SDK'));
+    }
+
     delete event.ResourceProperties.ServiceToken;
-    delete event.ResourceProperties.OutputBucket; // Not accepted by SDK
-    var params = event.ResourceProperties;
+    delete event.ResourceProperties.OutputBucket;
+    const params = event.ResourceProperties;
     params.Id = event.PhysicalResourceId;
     elasticTranscoder.updatePipeline(params, function (error, response) {
         if (error) {
             return callback(error);
         }
 
-        var data = {
+        const data = {
             physicalResourceId: response.Pipeline.Id,
             Arn: response.Pipeline.Arn
         };
@@ -56,7 +58,7 @@ pub.delete = function (event, _context, callback) {
         return setImmediate(callback);
     }
 
-    var params = {
+    const params = {
         Id: event.PhysicalResourceId
     };
     elasticTranscoder.deletePipeline(params, function (error) {
