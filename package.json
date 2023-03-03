@@ -43,7 +43,7 @@
     "nyc": "^15.1.0",
     "sinon": "^10.0.0",
     "aws-sdk": "*",
-    "coveralls": "2.11.9",
+    "coveralls": "3.1.1",
     "should": "9.0.2"
   }
 }
